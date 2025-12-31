@@ -1,5 +1,6 @@
 use actix_web::{
     App, HttpResponse, HttpServer, Responder,
+    middleware::Logger,
     web::{self, Json, Path},
 };
 use serde::{Deserialize, Serialize};
@@ -7,9 +8,11 @@ use sqlx::{Executor, SqlitePool, prelude::FromRow};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
     let pool = db().await;
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::new("%r \x1b[32m%s\x1b[0m %b %D"))
             .app_data(web::Data::new(pool.clone()))
             .route("/todo_list", web::get().to(get_todo_list))
             .route("/todo/{id}", web::get().to(get_single_todo))
